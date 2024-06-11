@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ocs.fullname" . }}-index-html
+  labels:
+{{ include "ocs.labels" . | indent 4 }}
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>OCS Inventory Redirect</title>
+        <meta http-equiv="refresh" content="1; URL='https://{{ (index .Values.ingress.hosts 0).host }}/ocsreports'"/>
+    </head>
+    <body>
+    </body>
+    </html>

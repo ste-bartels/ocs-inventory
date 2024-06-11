@@ -1,0 +1,15 @@
+apiVersion: v2
+name: ocs
+description: OCS Inventory
+type: application
+version: 0.1.0
+appVersion: "1.16.0"
+sources:
+  - "http://wiki.ocsinventory-ng.org"
+icon: 
+dependencies:
+  - name: mysql
+    version: 9.4.4
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+     

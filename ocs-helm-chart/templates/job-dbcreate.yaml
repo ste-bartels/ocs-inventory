@@ -1,0 +1,49 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.database.jobName }}
+  labels:
+    {{- include "ocs.labels" . | nindent 4 }}
+    job-name: {{ .Values.database.jobName }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  activeDeadlineSeconds: 300
+  backoffLimit: 10
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        {{- include "ocs.labels" . | nindent 8 }}
+        job-name: {{ .Values.database.jobName }}
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: {{ .Values.database.jobName }}
+        env:
+          - name: "OCS_DB_SERVER"
+          {{- if .Values.mysql.enabled }}
+            value: {{ include "ocs.fullname" . }}-mysql
+          {{- else }}
+            value: {{ .Values.env.dbHost }}
+          {{- end }}
+        envFrom:
+          - secretRef: 
+              name: {{ include "ocs.fullname" . }}
+        command: ["/bin/bash"]
+        args:
+        - '-c'
+        - |
+          sleep 20;
+          apt update && apt install curl -y
+          curl -s -L https://raw.githubusercontent.com/OCSInventory-NG/OCSInventory-Docker-Image/master/{{ .Values.image.tag }}/sql/ocsbase.sql -o ./ocsbase.sql
+          
+          cat ocsbase.sql | mysql -u $OCS_DB_USER --password="$OCS_DB_PASS" -h $OCS_DB_SERVER $OCS_DB_NAME
+          
+        image: ubuntu/mysql
+        imagePullPolicy: IfNotPresent
+        resources:
+          {{- toYaml .Values.database.resources | nindent 10 }}
